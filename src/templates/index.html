@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Detector de Spam de URLs</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: white;
+            margin-top: 50px;
+            padding: 30px 50px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 12px;
+            border-radius: 8px;
+        }
+        .spam {
+            color: #fff;
+            background-color: #e74c3c;
+        }
+        .not-spam {
+            color: #fff;
+            background-color: #2ecc71;
+        }
+
+        /* Spinner CSS */
+        #loading {
+            display: none;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            margin: auto;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg);}
+            100% { transform: rotate(360deg);}
+        }
+        #loading-text {
+            margin-top: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Detector de Spam de URLs</h1>
+        <form id="urlForm">
+            <input type="text" id="urlInput" placeholder="Ingresa la URL" required>
+            <button type="submit">Verificar</button>
+        </form>
+
+        <div id="loading">
+            <div class="spinner"></div>
+            <div id="loading-text">Prediciendo...</div>
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const form = document.getElementById('urlForm');
+        const resultDiv = document.getElementById('result');
+        const loadingDiv = document.getElementById('loading');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const url = document.getElementById('urlInput').value;
+
+            // Mostrar spinner y limpiar resultados
+            loadingDiv.style.display = "block";
+            resultDiv.innerHTML = "";
+
+            try {
+                const response = await fetch('/api/predict', {
+                    method: 'POST',
+                    body: new URLSearchParams({ url })
+                });
+
+                const data = await response.json();
+
+                // Ocultar spinner
+                loadingDiv.style.display = "none";
+
+                if (data.error) {
+                    resultDiv.innerHTML = `<div class="result spam">Error: ${data.error}</div>`;
+                } else if (data.prediction === 1) {
+                    resultDiv.innerHTML = '<div class="result spam">Resultado: SPAM 🚫</div>';
+                } else {
+                    resultDiv.innerHTML = '<div class="result not-spam">Resultado: NO SPAM ✅</div>';
+                }
+            } catch (err) {
+                loadingDiv.style.display = "none";
+                resultDiv.innerHTML = '<div class="result spam">Error al conectar con el servidor</div>';
+            }
+        });
+    </script>
+</body>
+</html>
